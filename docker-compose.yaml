@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: playlist_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-playlist}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/postgres/schema.sql:/docker-entrypoint-initdb.d/00-schema.sql:ro
+volumes:
+  pgdata:
+
