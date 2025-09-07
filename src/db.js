@@ -4,11 +4,11 @@ import pg from "pg";
 dotenv.config();
 
 export const pool = new pg.Pool({
-  user: process.env.POSTGRES_USER,
-  host: 'localhost',
-  database: process.env.POSTGRES_DB,
-  password: process.env.POSTGRES_PASSWORD,
-  port: 5432,
+	user: process.env.POSTGRES_USER,
+	host: process.env.POSTGRES_HOST,
+	database: process.env.POSTGRES_DB,
+	password: process.env.POSTGRES_PASSWORD,
+	port: process.env.POSTGRES_PORT,
 });
 
 export async function tx(run) {
@@ -25,3 +25,4 @@ export async function tx(run) {
 		client.release();
 	}
 }
+
