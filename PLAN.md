@@ -18,13 +18,11 @@
 
 * Tables: `artists`, `albums`, `tracks`, `playlists`, `playlist_tracks`, `audio_features`, `track_artists`.
 * Add PKs, FKs, `NOT NULL`, `CHECK`, composite UNIQUE on `(playlist_id, track_id, position)`.
-* Indexes: `playlist_tracks(playlist_id)`, `audio_features(energy desc)`, `tracks(popularity desc)`, `track_artists(artist_id)`.
+* Indexes: `playlist_tracks(playlist_id)`, `tracks(popularity desc)`, `track_artists(artist_id)`.
 
 **1.3 DB client helpers**
 
-* `src/db/pool.js`: pg Pool.
-* `src/db/tx.js`: `tx(fn)` helper with BEGIN/COMMIT/ROLLBACK.
-* `src/db/sql.js`: placeholder + flatten helpers.
+* `src/db.js`: pg Pool ,transaction helper , placeholder helper.
 
 ---
 
