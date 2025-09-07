@@ -1,0 +1,14 @@
+
+{
+  "audio_features": [
+    {
+      "id": "track1",
+      "danceability": 0.8,
+      "energy": 0.7,
+      "key": 5,
+      "mode": 1,
+      "tempo": 120.0,
+      "valence": 0.9
+    }
+  ]
+}

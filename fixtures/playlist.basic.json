@@ -1,0 +1,45 @@
+
+{
+  "id": "37i9dQZF1DXcBWIGoYBM5M",
+  "name": "Today's Top Hits",
+  "owner": {
+    "display_name": "Spotify",
+    "id": "spotify"
+  },
+  "snapshot_id": "snapshot1",
+  "tracks": {
+    "items": [
+      {
+        "added_at": "2024-01-01T00:00:00Z",
+        "added_by": {
+          "id": "spotify"
+        },
+        "track": {
+          "album": {
+            "album_type": "album",
+            "artists": [
+              {
+                "id": "artist1",
+                "name": "Artist Name"
+              }
+            ],
+            "id": "album1",
+            "name": "Album Name",
+            "release_date": "2023-01-01"
+          },
+          "artists": [
+            {
+              "id": "artist1",
+              "name": "Artist Name"
+            }
+          ],
+          "duration_ms": 200000,
+          "explicit": false,
+          "id": "track1",
+          "name": "Track Name",
+          "popularity": 90
+        }
+      }
+    ]
+  }
+}
