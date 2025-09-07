@@ -1,6 +1,5 @@
-
 {
-  "id": "37i9dQZF1DXcBWIGoYBM5M",
+  "id": 1,
   "name": "Today's Top Hits",
   "owner": {
     "display_name": "Spotify",
@@ -19,25 +18,60 @@
             "album_type": "album",
             "artists": [
               {
-                "id": "artist1",
-                "name": "Artist Name"
+                "id": 1,
+                "name": "Artist One"
               }
             ],
-            "id": "album1",
-            "name": "Album Name",
+            "id": 1,
+            "name": "Album One",
             "release_date": "2023-01-01"
           },
           "artists": [
             {
-              "id": "artist1",
-              "name": "Artist Name"
+              "id": 1,
+              "name": "Artist One"
+            },
+            {
+              "id": 2,
+              "name": "Artist Two"
             }
           ],
           "duration_ms": 200000,
           "explicit": false,
-          "id": "track1",
-          "name": "Track Name",
+          "id": 1,
+          "name": "Track One",
           "popularity": 90
+        }
+      },
+      {
+        "added_at": "2024-01-02T00:00:00Z",
+        "added_by": {
+          "id": "spotify"
+        },
+        "track": {
+          "album": {
+            "album_type": "single",
+            "artists": [
+              {
+                "id": 2,
+                "name": "Artist Two"
+              }
+            ],
+            "id": 2,
+            "name": "Album Two",
+            "release_date": "2023-02-01"
+          },
+          "artists": [
+            {
+              "id": 2,
+              "name": "Artist Two"
+            }
+          ],
+          "duration_ms": 180000,
+          "explicit": true,
+          "id": 2,
+          "name": "Track Two",
+          "popularity": 85
         }
       }
     ]
