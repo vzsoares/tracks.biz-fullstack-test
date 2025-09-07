@@ -30,7 +30,7 @@
 
 **2.1 CLI scaffolding**
 
-* `src/ingest/ingest.js` with `yargs` flags: `--from`, `--features`, `--batch`.
+* `src/ingest.js` with `yargs` flags: `--from`, `--features`, `--batch`.
 * Load env with dotenv.
 
 **2.2 Parse & normalize**
@@ -53,7 +53,7 @@
 
 **3.1 Fastify server**
 
-* `src/api/server.js`: build Fastify instance, register pg pool plugin, register routes.
+* `src/server.js`: build Fastify instance, register pg pool plugin, register routes.
 * Add `/health`.
 * Start only if not under test.
 
