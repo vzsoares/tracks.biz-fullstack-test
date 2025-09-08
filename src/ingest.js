@@ -149,61 +149,35 @@ function normalizeData(playlistJson, featuresJson) {
 async function upsertData(data) {
   console.log('Upserting data...');
   await tx(async (client) => {
-    // Upsert artists
-    for (const artist of data.artists) {
-      await client.query(
-        'INSERT INTO artists (id, name) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING',
-        [artist.id, artist.name]
-      );
-    }
 
-    // Upsert albums
-    for (const album of data.albums) {
-      await client.query(
-        'INSERT INTO albums (id, name, release_date, album_type, artist_id) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING',
-        [album.id, album.name, album.release_date, album.album_type, album.artist_id]
-      );
-    }
+const insert = async (table, columns, records) => {
+  if (records.length === 0) return;
 
-    // Upsert tracks
-    for (const track of data.tracks) {
-      await client.query(
-        'INSERT INTO tracks (id, name, duration_ms, explicit, popularity, album_id) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO NOTHING',
-        [track.id, track.name, track.duration_ms, track.explicit, track.popularity, track.album_id]
-      );
-    }
+  const values = [];
+  const placeholders = records
+    .map((row, i) => {
+      const base = i * columns.length;
+      values.push(...columns.map(c => row[c]));
+      return `(${columns.map((_, j) => `$${base + j + 1}`).join(',')})`;
+    })
+    .join(',');
 
-    // Upsert track_artists
-    for (const ta of data.track_artists) {
-      await client.query(
-        'INSERT INTO track_artists (track_id, artist_id) VALUES ($1, $2) ON CONFLICT (track_id, artist_id) DO NOTHING',
-        [ta.track_id, ta.artist_id]
-      );
-    }
+  const query = `
+    INSERT INTO ${table} (${columns.join(', ')})
+    VALUES ${placeholders}
+    ON CONFLICT DO NOTHING
+  `;
 
-    // Upsert playlists
-    for (const playlist of data.playlists) {
-      await client.query(
-        'INSERT INTO playlists (id, name, owner, snapshot) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING',
-        [playlist.id, playlist.name, playlist.owner, playlist.snapshot]
-      );
-    }
+  await client.query(query, values);
+};
 
-    // Upsert playlist_tracks
-    for (const pt of data.playlist_tracks) {
-      await client.query(
-        'INSERT INTO playlist_tracks (playlist_id, track_id, added_at, added_by, position) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (playlist_id, track_id) DO NOTHING',
-        [pt.playlist_id, pt.track_id, pt.added_at, pt.added_by, pt.position]
-      );
-    }
-
-    // Upsert audio_features
-    for (const af of data.audio_features) {
-      await client.query(
-        'INSERT INTO audio_features (track_id, danceability, energy, key, mode, tempo, valence) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (track_id) DO NOTHING',
-        [af.track_id, af.danceability, af.energy, af.key, af.mode, af.tempo, af.valence]
-      );
-    }
+    await insert('artists', ['id', 'name', 'popularity', 'followers'], data.artists);
+    await insert('albums', ['id', 'name', 'release_date', 'album_type', 'artist_id'], data.albums);
+    await insert('tracks', ['id', 'name', 'duration_ms', 'explicit', 'popularity', 'album_id'], data.tracks);
+    await insert('track_artists', ['track_id', 'artist_id'], data.track_artists);
+    await insert('playlists', ['id', 'name', 'owner', 'snapshot'], data.playlists);
+    await insert('playlist_tracks', ['playlist_id', 'track_id', 'added_at', 'added_by', 'position'], data.playlist_tracks);
+    await insert('audio_features', ['track_id', 'danceability', 'energy', 'key', 'mode', 'tempo', 'valence'], data.audio_features);
   });
 }
 
