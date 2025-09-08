@@ -12,9 +12,35 @@ async function artistRoutes(fastify, options) {
 			200: {
 				type: "object",
 				properties: {
-					artist: { type: "object" },
-					top_tracks: { type: "array" },
-					averages: { type: "object" },
+					artist: {
+						type: "object",
+						properties: {
+							id: { type: "number" },
+							name: { type: "string" },
+							popularity: { type: "number" },
+							followers: { type: "number" },
+						},
+					},
+					top_tracks: {
+						type: "array",
+						items: {
+							type: "object",
+							properties: {
+								id: { type: "number" },
+								name: { type: "string" },
+								popularity: { type: "number" },
+							},
+						},
+					},
+					averages: {
+						type: "object",
+						properties: {
+							energy: { type: "number" },
+							danceability: { type: "number" },
+							valence: { type: "number" },
+							tempo: { type: "number" },
+						},
+					},
 				},
 			},
 		},

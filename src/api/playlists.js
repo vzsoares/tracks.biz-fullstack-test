@@ -14,6 +14,30 @@ async function playlistRoutes(fastify, options) {
 				energyMin: { type: "number", default: 0, minimum: 0, maximum: 1 },
 			},
 		},
+		response: {
+			200: {
+				type: "array",
+				items: {
+					type: "object",
+					properties: {
+						id: { type: "number" },
+						name: { type: "string" },
+						popularity: { type: "number" },
+						energy: { type: "number" },
+						artists: {
+							type: "array",
+							items: {
+								type: "object",
+								properties: {
+									id: { type: "number" },
+									name: { type: "string" },
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	};
 
 	fastify.get("/playlists/:id/tracks", { schema }, async (request, reply) => {
