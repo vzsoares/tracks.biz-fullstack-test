@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { promises as fs } from "node:fs";
-import { resolve } from 'node:path';
+import { resolve } from "node:path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { pool, tx } from "./db.js";
@@ -56,129 +56,158 @@ async function main() {
 }
 
 function normalizeData(playlistJson, featuresJson) {
-  console.log('Normalizing data...');
+	console.log("Normalizing data...");
 
-  const featuresMap = new Map(featuresJson.audio_features.map((f) => [f.id, f]));
+	const featuresMap = new Map(
+		featuresJson.audio_features.map((f) => [f.id, f]),
+	);
 
-  const playlist = {
-    id: playlistJson.id,
-    name: playlistJson.name,
-    owner: playlistJson.owner.id,
-    snapshot: playlistJson.snapshot_id,
-  };
+	const playlist = {
+		id: playlistJson.id,
+		name: playlistJson.name,
+		owner: playlistJson.owner.id,
+		snapshot: playlistJson.snapshot_id,
+	};
 
-  const artists = new Map();
-  const albums = new Map();
-  const tracks = [];
-  const track_artists = [];
-  const playlist_tracks = [];
-  const audio_features = [];
+	const artists = new Map();
+	const albums = new Map();
+	const tracks = [];
+	const track_artists = [];
+	const playlist_tracks = [];
+	const audio_features = [];
 
-  for (const item of playlistJson.tracks.items) {
-    const track = item.track;
-    if (!track) continue;
+	for (const item of playlistJson.tracks.items) {
+		const track = item.track;
+		if (!track) continue;
 
-    // Artists
-    for (const artist of track.artists) {
-      if (!artists.has(artist.id)) {
-        artists.set(artist.id, {
-          id: artist.id,
-          name: artist.name,
-          popularity: null, // Not available in this context
-          followers: null, // Not available in this context
-        });
-      }
-    }
+		// Artists
+		for (const artist of track.artists) {
+			if (!artists.has(artist.id)) {
+				artists.set(artist.id, {
+					id: artist.id,
+					name: artist.name,
+					popularity: null, // Not available in this context
+					followers: null, // Not available in this context
+				});
+			}
+		}
 
-    // Album
-    if (track.album && !albums.has(track.album.id)) {
-      albums.set(track.album.id, {
-        id: track.album.id,
-        name: track.album.name,
-        release_date: track.album.release_date,
-        album_type: track.album.album_type,
-        artist_id: track.album.artists[0].id, // Assuming one artist per album for simplicity
-      });
-    }
+		// Album
+		if (track.album && !albums.has(track.album.id)) {
+			albums.set(track.album.id, {
+				id: track.album.id,
+				name: track.album.name,
+				release_date: track.album.release_date,
+				album_type: track.album.album_type,
+				artist_id: track.album.artists[0].id, // Assuming one artist per album for simplicity
+			});
+		}
 
-    // Track
-    tracks.push({
-      id: track.id,
-      name: track.name,
-      duration_ms: track.duration_ms,
-      explicit: track.explicit,
-      popularity: track.popularity,
-      album_id: track.album.id,
-    });
+		// Track
+		tracks.push({
+			id: track.id,
+			name: track.name,
+			duration_ms: track.duration_ms,
+			explicit: track.explicit,
+			popularity: track.popularity,
+			album_id: track.album.id,
+		});
 
-    // Track-Artists
-    for (const artist of track.artists) {
-      track_artists.push({ track_id: track.id, artist_id: artist.id });
-    }
+		// Track-Artists
+		for (const artist of track.artists) {
+			track_artists.push({ track_id: track.id, artist_id: artist.id });
+		}
 
-    // Playlist-Tracks
-    playlist_tracks.push({
-      playlist_id: playlist.id,
-      track_id: track.id,
-      added_at: item.added_at,
-      added_by: item.added_by.id,
-      position: item.position, // Assuming position is available
-    });
+		// Playlist-Tracks
+		playlist_tracks.push({
+			playlist_id: playlist.id,
+			track_id: track.id,
+			added_at: item.added_at,
+			added_by: item.added_by.id,
+			position: item.position, // Assuming position is available
+		});
 
-    // Audio Features
-    if (featuresMap.has(track.id)) {
-      const features = featuresMap.get(track.id);
-      audio_features.push({
-        track_id: track.id,
-        ...features,
-      });
-    }
-  }
+		// Audio Features
+		if (featuresMap.has(track.id)) {
+			const features = featuresMap.get(track.id);
+			audio_features.push({
+				track_id: track.id,
+				...features,
+			});
+		}
+	}
 
-  return {
-    playlists: [playlist],
-    artists: Array.from(artists.values()),
-    albums: Array.from(albums.values()),
-    tracks,
-    track_artists,
-    playlist_tracks,
-    audio_features,
-  };
+	return {
+		playlists: [playlist],
+		artists: Array.from(artists.values()),
+		albums: Array.from(albums.values()),
+		tracks,
+		track_artists,
+		playlist_tracks,
+		audio_features,
+	};
 }
 
 async function upsertData(data) {
-  console.log('Upserting data...');
-  await tx(async (client) => {
+	console.log("Upserting data...");
+	await tx(async (client) => {
+		const insert = async (table, columns, records) => {
+			if (records.length === 0) return;
 
-const insert = async (table, columns, records) => {
-  if (records.length === 0) return;
+			const values = [];
+			const placeholders = records
+				.map((row, i) => {
+					const base = i * columns.length;
+					values.push(...columns.map((c) => row[c]));
+					return `(${columns.map((_, j) => `$${base + j + 1}`).join(",")})`;
+				})
+				.join(",");
 
-  const values = [];
-  const placeholders = records
-    .map((row, i) => {
-      const base = i * columns.length;
-      values.push(...columns.map(c => row[c]));
-      return `(${columns.map((_, j) => `$${base + j + 1}`).join(',')})`;
-    })
-    .join(',');
-
-  const query = `
-    INSERT INTO ${table} (${columns.join(', ')})
+			const query = `
+    INSERT INTO ${table} (${columns.join(", ")})
     VALUES ${placeholders}
     ON CONFLICT DO NOTHING
   `;
 
-  await client.query(query, values);
-};
+			await client.query(query, values);
+		};
 
-    await insert('artists', ['id', 'name', 'popularity', 'followers'], data.artists);
-    await insert('albums', ['id', 'name', 'release_date', 'album_type', 'artist_id'], data.albums);
-    await insert('tracks', ['id', 'name', 'duration_ms', 'explicit', 'popularity', 'album_id'], data.tracks);
-    await insert('track_artists', ['track_id', 'artist_id'], data.track_artists);
-    await insert('playlists', ['id', 'name', 'owner', 'snapshot'], data.playlists);
-    await insert('playlist_tracks', ['playlist_id', 'track_id', 'added_at', 'added_by', 'position'], data.playlist_tracks);
-    await insert('audio_features', ['track_id', 'danceability', 'energy', 'key', 'mode', 'tempo', 'valence'], data.audio_features);
-  });
+		await insert(
+			"artists",
+			["id", "name", "popularity", "followers"],
+			data.artists,
+		);
+		await insert(
+			"albums",
+			["id", "name", "release_date", "album_type", "artist_id"],
+			data.albums,
+		);
+		await insert(
+			"tracks",
+			["id", "name", "duration_ms", "explicit", "popularity", "album_id"],
+			data.tracks,
+		);
+		await insert(
+			"track_artists",
+			["track_id", "artist_id"],
+			data.track_artists,
+		);
+		await insert(
+			"playlists",
+			["id", "name", "owner", "snapshot"],
+			data.playlists,
+		);
+		await insert(
+			"playlist_tracks",
+			["playlist_id", "track_id", "added_at", "added_by", "position"],
+			data.playlist_tracks,
+		);
+		await insert(
+			"audio_features",
+			["track_id", "danceability", "energy", "key", "mode", "tempo", "valence"],
+			data.audio_features,
+		);
+	});
 }
 
 main();
