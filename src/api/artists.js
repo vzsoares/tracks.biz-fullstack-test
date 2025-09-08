@@ -24,7 +24,7 @@ async function artistRoutes(fastify, options) {
 		const { id } = request.params;
 
 		try {
-			tx(async (client) => {
+			const result = await tx(async (client) => {
 				const { rows } = await client.query(
 					`
         WITH top_tracks AS (
@@ -64,6 +64,7 @@ async function artistRoutes(fastify, options) {
 				);
 				return rows[0];
 			});
+			reply.code(200).send(result);
 		} catch (e) {
 			reply.code(500).send({ error: e.message });
 		}

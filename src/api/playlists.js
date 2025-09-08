@@ -21,7 +21,7 @@ async function playlistRoutes(fastify, options) {
 		const { energyMin } = request.query;
 
 		try {
-			tx(async (client) => {
+			const result = await tx(async (client) => {
 				const { rows } = await client.query(
 					`
         SELECT
@@ -52,6 +52,7 @@ async function playlistRoutes(fastify, options) {
 				);
 				return rows;
 			});
+			reply.code(200).send(result);
 		} catch (e) {
 			reply.code(500).send({ error: e.message });
 		}
