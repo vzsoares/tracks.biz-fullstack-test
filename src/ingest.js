@@ -30,6 +30,7 @@ async function main() {
 
 	const fromPath = resolve(argv.from);
 	const featuresPath = resolve(argv.features);
+    // TODO batch
 	const batchSize = argv.batch;
 
 	console.log(`Ingesting playlist from: ${fromPath}`);
