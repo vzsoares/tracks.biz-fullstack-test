@@ -62,11 +62,11 @@
 * Define schemas directly in route options (`schema: { params, querystring, response }`).
 * Playlist tracks route:
 
-  * Params: `{ id: string }`
+  * Params: `{ id: number }`
   * Querystring: `{ energyMin: number, default: 0, min: 0, max: 1 }`
 * Artist summary route:
 
-  * Params: `{ id: string }`
+  * Params: `{ id: number }`
   * Response: `{ artist, top_tracks, averages }`.
 
 **3.3 Endpoints**
