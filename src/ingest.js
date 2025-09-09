@@ -100,7 +100,6 @@ function normalizeData(playlistJson, featuresJson) {
 				name: track.album.name,
 				release_date: track.album.release_date,
 				album_type: track.album.album_type,
-				artist_id: track.album.artists[0].id, // Assuming one artist per album for simplicity
 			});
 		}
 
@@ -189,7 +188,7 @@ async function upsertData(data) {
 		);
 		await insert(
 			"albums",
-			["id", "name", "release_date", "album_type", "artist_id"],
+			["id", "name", "release_date", "album_type"],
 			data.albums,
 		);
 		await insert(
