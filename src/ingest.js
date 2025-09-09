@@ -123,7 +123,7 @@ function normalizeData(playlistJson, featuresJson) {
 			playlist_id: playlist.id,
 			track_id: track.id,
 			added_at: item.added_at,
-			added_by: item.added_by.id,
+			added_by: item.added_by,
 			position: item.position, // Assuming position is available
 		});
 
