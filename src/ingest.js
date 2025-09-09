@@ -38,13 +38,12 @@ async function main() {
 	console.log(`Batch size: ${batchSize}`);
 
 	try {
-		// 1. Parse & Normalize JSON files
 		const playlistJson = JSON.parse(await fs.readFile(fromPath, "utf-8"));
 		const featuresJson = JSON.parse(await fs.readFile(featuresPath, "utf-8"));
 
+		// TODO batch playlist.tracks.items
 		const normalizedData = normalizeData(playlistJson, featuresJson);
 
-		// 2. Upsert data in transactional batches
 		await upsertData(normalizedData);
 
 		console.log("Ingestion complete!");
