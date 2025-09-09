@@ -10,6 +10,7 @@ ORDER BY (artist_id, event_date);
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_artist_daily_aggr 
 TO artist_daily_uniques 
 AS
+-- When i run this select by itself, it works fine
 SELECT
     -- toDate returns YYYY-MM-DD
     toDate(added_at) AS event_date,
