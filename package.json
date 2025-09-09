@@ -1,27 +1,28 @@
 {
-  "name": "tracks.biz-fullstack-test",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test:unit": "node --test src",
-    "test:integration": "node --test test",
-    "start": "node src/api/server.js",
-    "ingest": "node src/ingest.js --from fixtures/playlist.basic.json --features fixtures/audio_features.json"
-  },
-  "type": "module",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@fastify/swagger": "^9.5.1",
-    "@fastify/swagger-ui": "^5.2.3",
-    "dotenv": "^17.2.2",
-    "fastify": "^5.6.0",
-    "pg": "^8.16.3",
-    "yargs": "^17.7.2"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.2.3"
-  }
+	"name": "tracks.biz-fullstack-test",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "npm run test:unit && npm run test:integration",
+		"test:unit": "node --test src",
+		"test:integration": "node --test test",
+		"start": "node src/api/server.js",
+		"ingest": "node src/ingest.js --from fixtures/playlist.basic.json --features fixtures/audio_features.json"
+	},
+	"type": "module",
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@fastify/swagger": "^9.5.1",
+		"@fastify/swagger-ui": "^5.2.3",
+		"dotenv": "^17.2.2",
+		"fastify": "^5.6.0",
+		"pg": "^8.16.3",
+		"yargs": "^17.7.2"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.2.3"
+	}
 }
