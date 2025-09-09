@@ -62,7 +62,7 @@ function normalizeData(playlistJson, featuresJson) {
 	const playlist = {
 		id: playlistJson.id,
 		name: playlistJson.name,
-		owner: playlistJson.owner.id,
+		owner: playlistJson.owner,
 		snapshot: playlistJson.snapshot_id,
 	};
 
