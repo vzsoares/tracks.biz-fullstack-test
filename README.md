@@ -1,13 +1,13 @@
 # tracks.biz-fullstack-test
 
-Hi reviewer, I kept this app intentionally simple (KISS) with minimal libraries and abstractions. In production, I’d introduce a clearer structure (e.g., MVC) and use TypeScript. I don’t have prior ClickHouse experience, so I focused on correctness for the SQL tasks. Batching feels less relevant for this single‑playlist fixture; it would be more useful with multiple playlists. I kept ingestion atomic; for batching, I’d likely use a buffered generator (yield) implementation.
-
+Hi reviewer, I kept this app intentionally simple (KISS) with minimal libraries and abstractions. In production, I’d introduce a clearer structure (e.g., MVC) and use TypeScript. I don’t have prior ClickHouse experience, so it might have taken more time than usual for that.
 
 **What’s here**
 - Postgres schema with constraints and indexes (`db/postgres/schema.sql`)
 - Ingest CLI with idempotent upserts (`src/ingest.js`)
-- Fastify API with one raw-SQL endpoint (`src/api/*`)
+- Fastify API with two raw-SQL endpoint (`src/api/*`)
 - Unit + integration tests (Node’s built-in runner)
+- Clickhouse queries (`ch/*`)
 
 **Prereqs**
 - Node `v20` (see `.nvmrc`)
@@ -49,3 +49,4 @@ Hi reviewer, I kept this app intentionally simple (KISS) with minimal libraries 
 
 **Notes**
 - Upserts use `ON CONFLICT DO NOTHING` to ensure idempotency.
+- Fixtures probably should be included with the test description
