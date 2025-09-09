@@ -30,7 +30,7 @@ async function main() {
 
 	const fromPath = resolve(argv.from);
 	const featuresPath = resolve(argv.features);
-    // TODO batch
+	// TODO batch
 	const batchSize = argv.batch;
 
 	console.log(`Ingesting playlist from: ${fromPath}`);
@@ -151,6 +151,9 @@ function normalizeData(playlistJson, featuresJson) {
 
 async function upsertData(data) {
 	console.log("Upserting data...");
+	console.time("Total upsert duration");
+	let totalUpserted = 0;
+
 	await tx(async (client) => {
 		const insert = async (table, columns, records) => {
 			if (records.length === 0) return;
@@ -169,8 +172,14 @@ async function upsertData(data) {
     VALUES ${placeholders}
     ON CONFLICT DO NOTHING
   `;
+			console.time(`Upsert ${table}`);
+			const res = await client.query(query, values);
+			console.timeEnd(`Upsert ${table}`);
 
-			await client.query(query, values);
+			if (res.rowCount > 0) {
+				console.log(`Upserted ${res.rowCount} rows into ${table}`);
+			}
+			totalUpserted += res.rowCount;
 		};
 
 		await insert(
@@ -209,6 +218,9 @@ async function upsertData(data) {
 			data.audio_features,
 		);
 	});
+
+	console.timeEnd("Total upsert duration");
+	console.log(`Total rows upserted: ${totalUpserted}`);
 }
 
 main();
