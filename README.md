@@ -1,5 +1,7 @@
 # tracks.biz-fullstack-test
 
+Hi reviewer, I kept this app intentionally simple (KISS) with minimal libraries and abstractions. In production, I’d introduce a clearer structure (e.g., MVC) and use TypeScript. I don’t have prior ClickHouse experience, so I focused on correctness for the SQL tasks. Batching feels less relevant for this single‑playlist fixture; it would be more useful with multiple playlists. I kept ingestion atomic; for batching, I’d likely use a buffered generator (yield) implementation.
+
 
 **What’s here**
 - Postgres schema with constraints and indexes (`db/postgres/schema.sql`)
