@@ -70,6 +70,7 @@ function normalizeData(playlistJson, featuresJson) {
 		snapshot: playlistJson.snapshot_id,
 	};
 
+	// Map to avoid duplicates
 	const artists = new Map();
 	const albums = new Map();
 	const tracks = [];
@@ -77,7 +78,8 @@ function normalizeData(playlistJson, featuresJson) {
 	const playlist_tracks = [];
 	const audio_features = [];
 
-	for (const item of playlistJson.tracks.items) {
+	for (let i = 0; i < playlistJson.tracks.items.length; i++) {
+		const item = playlistJson.tracks.items[i];
 		const track = item.track;
 		if (!track) continue;
 
@@ -87,8 +89,8 @@ function normalizeData(playlistJson, featuresJson) {
 				artists.set(artist.id, {
 					id: artist.id,
 					name: artist.name,
-					popularity: null, // Not available in this context
-					followers: null, // Not available in this context
+					popularity: null,
+					followers: null,
 				});
 			}
 		}
@@ -124,7 +126,7 @@ function normalizeData(playlistJson, featuresJson) {
 			track_id: track.id,
 			added_at: item.added_at,
 			added_by: item.added_by,
-			position: item.position, // Assuming position is available
+			position: i,
 		});
 
 		// Audio Features
