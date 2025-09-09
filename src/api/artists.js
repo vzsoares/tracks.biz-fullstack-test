@@ -1,6 +1,6 @@
 import { tx } from "../db.js";
 
-async function artistRoutes(fastify, options) {
+async function artistRoutes(fastify) {
 	const schema = {
 		params: {
 			type: "object",

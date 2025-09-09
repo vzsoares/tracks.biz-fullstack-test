@@ -1,8 +1,8 @@
-import test from "node:test";
 import assert from "node:assert/strict";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
+import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
-import { tx, pool } from "../src/db.js";
+import { pool, tx } from "../src/db.js";
 
 async function resetDb() {
 	await tx(async (client) => {
@@ -90,7 +90,7 @@ async function tableCounts() {
 	});
 }
 
-test("integration: ingest + API + idempotency", async (t) => {
+test("integration: ingest + API + idempotency", async () => {
 	await resetDb();
 
 	// First ingest
