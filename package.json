@@ -6,7 +6,7 @@
   "scripts": {
     "test:unit": "node --test src",
     "test:integration": "node --test test",
-    "start": "node src/server.js",
+    "start": "node src/api/server.js",
     "ingest": "node src/ingest.js --from fixtures/playlist.basic.json --features fixtures/audio_features.json"
   },
   "type": "module",

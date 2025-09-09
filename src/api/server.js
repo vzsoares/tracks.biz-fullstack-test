@@ -1,8 +1,8 @@
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import fastify from "fastify";
-import artists from "./api/artists.js";
-import playlists from "./api/playlists.js";
+import artists from "./artists.js";
+import playlists from "./playlists.js";
 
 const app = fastify({ logger: true });
 

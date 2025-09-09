@@ -54,7 +54,7 @@ async function waitForHealth(
 }
 
 function startServer() {
-	const child = spawn(process.execPath, ["src/server.js"], {
+	const child = spawn(process.execPath, ["src/api/server.js"], {
 		stdio: "inherit",
 		env: process.env,
 	});
