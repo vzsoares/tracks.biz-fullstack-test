@@ -59,10 +59,6 @@ async function main() {
 function normalizeData(playlistJson, featuresJson) {
 	console.log("Normalizing data...");
 
-	const featuresMap = new Map(
-		featuresJson.audio_features.map((f) => [f.id, f]),
-	);
-
 	const playlist = {
 		id: playlistJson.id,
 		name: playlistJson.name,
@@ -76,7 +72,7 @@ function normalizeData(playlistJson, featuresJson) {
 	const tracks = [];
 	const track_artists = [];
 	const playlist_tracks = [];
-	const audio_features = [];
+	const audio_features = featuresJson.audio_features;
 
 	for (let i = 0; i < playlistJson.tracks.items.length; i++) {
 		const item = playlistJson.tracks.items[i];
@@ -128,15 +124,6 @@ function normalizeData(playlistJson, featuresJson) {
 			added_by: item.added_by,
 			position: i,
 		});
-
-		// Audio Features
-		if (featuresMap.has(track.id)) {
-			const features = featuresMap.get(track.id);
-			audio_features.push({
-				track_id: track.id,
-				...features,
-			});
-		}
 	}
 
 	return {
@@ -160,6 +147,7 @@ async function upsertData(data) {
 			if (records.length === 0) return;
 
 			const values = [];
+			// This build a multi row insert statement with placeholders like ($1,$2,$3),($4,$5,$6),...
 			const placeholders = records
 				.map((row, i) => {
 					const base = i * columns.length;
