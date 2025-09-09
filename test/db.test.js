@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { pool, tx } from "./db.js";
+import { pool, tx } from "../src/db.js";
 
 test("tx commits and rollbacks appropriately", async (t) => {
 	await t.test("commits and returns result on success", async () => {
