@@ -23,3 +23,23 @@ FROM playlist_track_events
 WHERE action = 'add'
 GROUP BY playlist_id
 ORDER BY playlist_id;
+
+-- C) top‑5 artists *per day* by unique adds
+WITH daily AS (
+  SELECT
+    toDate(added_at) AS day,
+    artist_id,
+    uniqExact(track_id) AS uniq_adds
+  FROM playlist_track_events
+  WHERE action = 'add'
+  GROUP BY day, artist_id
+)
+SELECT day, artist_id, uniq_adds
+FROM (
+  SELECT day, artist_id, uniq_adds,
+        -- this is the sauce
+         row_number() OVER (PARTITION BY day ORDER BY uniq_adds DESC, artist_id) AS rnk
+  FROM daily
+)
+WHERE rnk <= 5
+ORDER BY day DESC, rnk ASC;
