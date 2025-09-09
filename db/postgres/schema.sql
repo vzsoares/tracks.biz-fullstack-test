@@ -61,9 +61,7 @@ CREATE TABLE IF NOT EXISTS track_artists (
   PRIMARY KEY (track_id, artist_id)
 );
 
--- Quickly fetch all tracks that belong to a given playlist
-CREATE INDEX IF NOT EXISTS idx_playlist_tracks_playlist ON playlist_tracks(playlist_id);
 -- Efficiently get the most popular tracks without scanning/sorting the whole table
 CREATE INDEX IF NOT EXISTS idx_tracks_popularity ON tracks(popularity DESC);
 -- Quickly list all tracks linked to a specific artist.
-CREATE INDEX IF NOT EXISTS idx_track_artists_artist ON track_artists(artist_id);
+CREATE INDEX IF NOT EXISTS idx_track_artists_artist_track ON track_artists(artist_id, track_id);

@@ -1,6 +1,5 @@
 # tracks.biz-fullstack-test
 
-Small ETL + API that ingests a Spotify-like playlist fixture into Postgres, then serves read-only endpoints over Fastify.
 
 **What’s here**
 - Postgres schema with constraints and indexes (`db/postgres/schema.sql`)
@@ -40,7 +39,11 @@ Small ETL + API that ingests a Spotify-like playlist fixture into Postgres, then
 - Unit only: `npm run test:unit`
 - Integration only: `npm run test:integration` (requires Postgres running + schema loaded)
 
+**DB Indexes**
+- `idx_tracks_popularity` on `tracks(popularity DESC)`
+  - Optimizes queries that rank tracks by popularity, especially `ORDER BY popularity DESC LIMIT N` (e.g., "top tracks" lookups). Can act as a sort aid after filters.
+- `idx_track_artists_artist_track` on `track_artists(artist_id, track_id)`
+  - Accelerates `WHERE artist_id = ?` filters and enables index-only scans to fetch `track_id` for immediate joins. Complements the PK `(track_id, artist_id)`, which does not help filters starting with `artist_id`.
+
 **Notes**
 - Upserts use `ON CONFLICT DO NOTHING` to ensure idempotency.
-- Useful indexes included in the schema (e.g., playlist lookups, track popularity, artist-track mapping).
-- ClickHouse part of the challenge can be added under `ch/` as SQL files (no runtime required).
