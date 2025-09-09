@@ -41,10 +41,13 @@ async function main() {
 		const playlistJson = JSON.parse(await fs.readFile(fromPath, "utf-8"));
 		const featuresJson = JSON.parse(await fs.readFile(featuresPath, "utf-8"));
 
+		const audio_features = featuresJson.audio_features;
+
 		// TODO batch playlist.tracks.items
-		const normalizedData = normalizeData(playlistJson, featuresJson);
+		const normalizedData = normalizeData(playlistJson);
 
 		await upsertData(normalizedData);
+		await upsertData({ audio_features });
 
 		console.log("Ingestion complete!");
 	} catch (error) {
@@ -55,7 +58,7 @@ async function main() {
 	}
 }
 
-function normalizeData(playlistJson, featuresJson) {
+function normalizeData(playlistJson) {
 	console.log("Normalizing data...");
 
 	const playlist = {
@@ -71,7 +74,6 @@ function normalizeData(playlistJson, featuresJson) {
 	const tracks = [];
 	const track_artists = [];
 	const playlist_tracks = [];
-	const audio_features = featuresJson.audio_features;
 
 	for (let i = 0; i < playlistJson.tracks.items.length; i++) {
 		const item = playlistJson.tracks.items[i];
@@ -132,7 +134,6 @@ function normalizeData(playlistJson, featuresJson) {
 		tracks,
 		track_artists,
 		playlist_tracks,
-		audio_features,
 	};
 }
 
@@ -143,7 +144,7 @@ async function upsertData(data) {
 
 	await tx(async (client) => {
 		const insert = async (table, columns, records) => {
-			if (records.length === 0) return;
+			if ((records?.length ?? 0) <= 0) return;
 
 			const values = [];
 			// This build a multi row insert statement with placeholders like ($1,$2,$3),($4,$5,$6),...
