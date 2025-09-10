@@ -2,7 +2,7 @@
 	"id": 1,
 	"name": "Today's Top Hits",
 	"owner": "spotify",
-	"snapshot_id": "snapshot1",
+	"snapshot": "snapshot1",
 	"tracks": {
 		"items": [
 			{

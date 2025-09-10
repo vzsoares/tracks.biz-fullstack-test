@@ -4,8 +4,9 @@ import { resolve } from "node:path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { pool, tx } from "./db.js";
+import crypto from "crypto";
 
-const BATCH_SIZE = process.env.BATCH_SIZE || 100;
+const BATCH_SIZE = 5;
 
 async function main() {
 	const argv = yargs(hideBin(process.argv))
@@ -30,7 +31,6 @@ async function main() {
 
 	const fromPath = resolve(argv.from);
 	const featuresPath = resolve(argv.features);
-	// TODO batch
 	const batchSize = argv.batch;
 
 	console.log(`Ingesting playlist from: ${fromPath}`);
@@ -38,17 +38,36 @@ async function main() {
 	console.log(`Batch size: ${batchSize}`);
 
 	try {
+		// TODO add more playlists in the fixture and batch it
 		const playlistJson = JSON.parse(await fs.readFile(fromPath, "utf-8"));
 		const featuresJson = JSON.parse(await fs.readFile(featuresPath, "utf-8"));
 
+		const rash = crypto
+			.createHash("sha256")
+			.update(JSON.stringify(playlistJson))
+			.digest("hex");
+		const playlistRash = await tx(async (client) => {
+			const res = await client.query(
+				"SELECT snapshot FROM playlists WHERE id = $1",
+				[playlistJson.id],
+			);
+			return res;
+		});
+		if (playlistRash?.rows?.[0]?.snapshot === rash) {
+			console.log("Playlist already ingested and unchanged. Exiting.");
+			return;
+		}
+
+		playlistJson.snapshot = rash;
+		const context = { totalUpserted: 0 };
 		const audio_features = featuresJson.audio_features;
 
-		// TODO batch playlist.tracks.items
 		const normalizedData = normalizeData(playlistJson);
 
-		await upsertData(normalizedData);
-		await upsertData({ audio_features });
+		await upsertData(normalizedData, context);
+		await upsertData({ audio_features }, context);
 
+		console.log(`Total rows upserted: ${context.totalUpserted}`);
 		console.log("Ingestion complete!");
 	} catch (error) {
 		console.error("Ingestion failed:", error);
@@ -65,7 +84,7 @@ function normalizeData(playlistJson) {
 		id: playlistJson.id,
 		name: playlistJson.name,
 		owner: playlistJson.owner,
-		snapshot: playlistJson.snapshot_id,
+		snapshot: playlistJson.snapshot,
 	};
 
 	// Map to avoid duplicates
@@ -137,13 +156,12 @@ function normalizeData(playlistJson) {
 	};
 }
 
-async function upsertData(data) {
+async function upsertData(data, context) {
 	console.log("Upserting data...");
 	console.time("Total upsert duration");
-	let totalUpserted = 0;
 
 	await tx(async (client) => {
-		const insert = async (table, columns, records) => {
+		async function insert(table, columns, records, client, context) {
 			if ((records?.length ?? 0) <= 0) return;
 
 			const values = [];
@@ -168,48 +186,61 @@ async function upsertData(data) {
 			if (res.rowCount > 0) {
 				console.log(`Upserted ${res.rowCount} rows into ${table}`);
 			}
-			totalUpserted += res.rowCount;
-		};
+			context.totalUpserted = context.totalUpserted + res.rowCount;
+		}
 
 		await insert(
 			"artists",
 			["id", "name", "popularity", "followers"],
 			data.artists,
+			client,
+			context,
 		);
 		await insert(
 			"albums",
 			["id", "name", "release_date", "album_type"],
 			data.albums,
+			client,
+			context,
 		);
 		await insert(
 			"tracks",
 			["id", "name", "duration_ms", "explicit", "popularity", "album_id"],
 			data.tracks,
+			client,
+			context,
 		);
 		await insert(
 			"track_artists",
 			["track_id", "artist_id"],
 			data.track_artists,
+			client,
+			context,
 		);
 		await insert(
 			"playlists",
 			["id", "name", "owner", "snapshot"],
 			data.playlists,
+			client,
+			context,
 		);
 		await insert(
 			"playlist_tracks",
 			["playlist_id", "track_id", "added_at", "added_by", "position"],
 			data.playlist_tracks,
+			client,
+			context,
 		);
 		await insert(
 			"audio_features",
 			["track_id", "danceability", "energy", "key", "mode", "tempo", "valence"],
 			data.audio_features,
+			client,
+			context,
 		);
 	});
 
 	console.timeEnd("Total upsert duration");
-	console.log(`Total rows upserted: ${totalUpserted}`);
 }
 
 main();

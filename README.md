@@ -44,8 +44,6 @@ Hi reviewer, I kept this app intentionally simple (KISS) with minimal libraries 
 **DB Indexes**
 - `idx_tracks_popularity` on `tracks(popularity DESC)`
   - Optimizes queries that rank tracks by popularity, especially `ORDER BY popularity DESC LIMIT N` (e.g., "top tracks" lookups). Can act as a sort aid after filters.
-- `idx_track_artists_artist_track` on `track_artists(artist_id, track_id)`
-  - Accelerates `WHERE artist_id = ?` filters and enables index-only scans to fetch `track_id` for immediate joins. Complements the PK `(track_id, artist_id)`, which does not help filters starting with `artist_id`.
 
 **Notes**
 - Upserts use `ON CONFLICT DO NOTHING` to ensure idempotency.

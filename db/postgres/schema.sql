@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS playlists (
     -- TODO no context of what this is, might need to change
     owner VARCHAR(255),
     -- TODO no context of what this is, might need to change
+    -- I'll assume this is a rash to avoid uneded updates
     snapshot VARCHAR(255)
 );
 
@@ -46,7 +47,6 @@ CREATE TABLE IF NOT EXISTS audio_features (
     energy FLOAT CHECK (energy >= 0 AND energy <= 1),
     tempo FLOAT CHECK (tempo > 0),
     -- 'key' indicates Musical key of the track.
-    -- -1 = no key detected
     -- 0 = C, 1 = C♯/D♭, 2 = D, ... 11 = B
     key INT CHECK (key >= 0 AND key <= 11),
     -- 'mode' indicates major (1) or minor (0) key.
@@ -57,11 +57,9 @@ CREATE TABLE IF NOT EXISTS audio_features (
 -- Extra table
 CREATE TABLE IF NOT EXISTS track_artists (
   track_id INT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-  artist_id INT NOT NULL REFERENCES artists(id) ON DELETE RESTRICT,
+  artist_id INT NOT NULL REFERENCES artists(id) ON DELETE,
   PRIMARY KEY (track_id, artist_id)
 );
 
 -- Efficiently get the most popular tracks without scanning/sorting the whole table
 CREATE INDEX IF NOT EXISTS idx_tracks_popularity ON tracks(popularity DESC);
--- Quickly list all tracks linked to a specific artist.
-CREATE INDEX IF NOT EXISTS idx_track_artists_artist_track ON track_artists(artist_id, track_id);
