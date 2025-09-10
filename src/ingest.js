@@ -73,6 +73,7 @@ async function main() {
 
 		const context = { totalUpserted: 0 };
 
+		// TODO recovery strategy if batch fails
 		for (let i = 0; i < toIngest.length; i += batchSize) {
 			const batch = toIngest.slice(i, i + batchSize);
 			const agg = normalizeData(batch);
