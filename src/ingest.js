@@ -38,6 +38,7 @@ async function main() {
 	console.log(`Batch size: ${batchSize}`);
 
 	try {
+		console.time("Ingestion Time");
 		const rawPlaylists = JSON.parse(await fs.readFile(fromPath, "utf-8"));
 		const featuresJson = JSON.parse(await fs.readFile(featuresPath, "utf-8"));
 
@@ -74,23 +75,7 @@ async function main() {
 
 		for (let i = 0; i < toIngest.length; i += batchSize) {
 			const batch = toIngest.slice(i, i + batchSize);
-			const agg = {
-				playlists: [],
-				artists: [],
-				albums: [],
-				tracks: [],
-				track_artists: [],
-				playlist_tracks: [],
-			};
-			for (const p of batch) {
-				const norm = normalizeData(p);
-				agg.playlists = agg.playlists.concat(norm.playlists);
-				agg.artists = agg.artists.concat(norm.artists);
-				agg.albums = agg.albums.concat(norm.albums);
-				agg.tracks = agg.tracks.concat(norm.tracks);
-				agg.track_artists = agg.track_artists.concat(norm.track_artists);
-				agg.playlist_tracks = agg.playlist_tracks.concat(norm.playlist_tracks);
-			}
+			const agg = normalizeData(batch);
 			await upsertData(agg, context);
 		}
 
@@ -98,86 +83,84 @@ async function main() {
 		await upsertData({ audio_features }, context);
 
 		console.log(`Total rows upserted: ${context.totalUpserted}`);
-		console.log("Ingestion complete!");
+		console.log("Ingestion Success");
 	} catch (error) {
 		console.error("Ingestion failed:", error);
 		process.exit(1);
 	} finally {
+		console.timeEnd("Ingestion Time");
 		await pool.end();
 	}
 }
 
-function normalizeData(playlistJson) {
+function normalizeData(playlists) {
 	console.log("Normalizing data...");
-
-	const playlist = {
-		id: playlistJson.id,
-		name: playlistJson.name,
-		owner: playlistJson.owner,
-		snapshot: playlistJson.snapshot,
-	};
-
-	// Map to avoid duplicates
+	const playlistsOut = [];
 	const artists = new Map();
 	const albums = new Map();
 	const tracks = [];
 	const track_artists = [];
 	const playlist_tracks = [];
 
-	for (let i = 0; i < playlistJson.tracks.items.length; i++) {
-		const item = playlistJson.tracks.items[i];
-		const track = item.track;
-		if (!track) continue;
+	for (const playlistJson of playlists) {
+		const playlist = {
+			id: playlistJson.id,
+			name: playlistJson.name,
+			owner: playlistJson.owner,
+			snapshot: playlistJson.snapshot,
+		};
+		playlistsOut.push(playlist);
 
-		// Artists
-		for (const artist of track.artists) {
-			if (!artists.has(artist.id)) {
-				artists.set(artist.id, {
-					id: artist.id,
-					name: artist.name,
-					popularity: null,
-					followers: null,
+		for (let i = 0; i < playlistJson.tracks.items.length; i++) {
+			const item = playlistJson.tracks.items[i];
+			const track = item.track;
+			if (!track) continue;
+
+			for (const artist of track.artists) {
+				if (!artists.has(artist.id)) {
+					artists.set(artist.id, {
+						id: artist.id,
+						name: artist.name,
+						popularity: null,
+						followers: null,
+					});
+				}
+			}
+
+			if (track.album && !albums.has(track.album.id)) {
+				albums.set(track.album.id, {
+					id: track.album.id,
+					name: track.album.name,
+					release_date: track.album.release_date,
+					album_type: track.album.album_type,
 				});
 			}
-		}
 
-		// Album
-		if (track.album && !albums.has(track.album.id)) {
-			albums.set(track.album.id, {
-				id: track.album.id,
-				name: track.album.name,
-				release_date: track.album.release_date,
-				album_type: track.album.album_type,
+			tracks.push({
+				id: track.id,
+				name: track.name,
+				duration_ms: track.duration_ms,
+				explicit: track.explicit,
+				popularity: track.popularity,
+				album_id: track.album.id,
+			});
+
+			for (const artist of track.artists) {
+				track_artists.push({ track_id: track.id, artist_id: artist.id });
+			}
+
+			playlist_tracks.push({
+				playlist_id: playlist.id,
+				track_id: track.id,
+				added_at: item.added_at,
+				added_by: item.added_by,
+				position: i,
 			});
 		}
-
-		// Track
-		tracks.push({
-			id: track.id,
-			name: track.name,
-			duration_ms: track.duration_ms,
-			explicit: track.explicit,
-			popularity: track.popularity,
-			album_id: track.album.id,
-		});
-
-		// Track-Artists
-		for (const artist of track.artists) {
-			track_artists.push({ track_id: track.id, artist_id: artist.id });
-		}
-
-		// Playlist-Tracks
-		playlist_tracks.push({
-			playlist_id: playlist.id,
-			track_id: track.id,
-			added_at: item.added_at,
-			added_by: item.added_by,
-			position: i,
-		});
 	}
 
 	return {
-		playlists: [playlist],
+		playlists: playlistsOut,
 		artists: Array.from(artists.values()),
 		albums: Array.from(albums.values()),
 		tracks,
