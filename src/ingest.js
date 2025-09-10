@@ -1,10 +1,10 @@
 import "dotenv/config";
 import { promises as fs } from "node:fs";
 import { resolve } from "node:path";
+import crypto from "crypto";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { pool, tx } from "./db.js";
-import crypto from "crypto";
 
 const BATCH_SIZE = 5;
 
@@ -38,33 +38,63 @@ async function main() {
 	console.log(`Batch size: ${batchSize}`);
 
 	try {
-		// TODO add more playlists in the fixture and batch it
-		const playlistJson = JSON.parse(await fs.readFile(fromPath, "utf-8"));
+		const rawPlaylists = JSON.parse(await fs.readFile(fromPath, "utf-8"));
 		const featuresJson = JSON.parse(await fs.readFile(featuresPath, "utf-8"));
 
-		const rash = crypto
-			.createHash("sha256")
-			.update(JSON.stringify(playlistJson))
-			.digest("hex");
-		const playlistRash = await tx(async (client) => {
-			const res = await client.query(
-				"SELECT snapshot FROM playlists WHERE id = $1",
-				[playlistJson.id],
-			);
-			return res;
-		});
-		if (playlistRash?.rows?.[0]?.snapshot === rash) {
-			console.log("Playlist already ingested and unchanged. Exiting.");
+		const playlists = rawPlaylists;
+
+		// Compute snapshot per playlist and skip unchanged ones
+		const toIngest = [];
+		for (const p of playlists) {
+			const rash = crypto
+				.createHash("sha256")
+				.update(JSON.stringify(p))
+				.digest("hex");
+			try {
+				const res = await pool.query(
+					"SELECT snapshot FROM playlists WHERE id = $1",
+					[p.id],
+				);
+				if (res?.rows?.[0]?.snapshot === rash) {
+					continue; // unchanged, skip
+				}
+			} catch {
+				// if select fails for any reason, proceed to ingest defensively
+			}
+			p.snapshot = rash;
+			toIngest.push(p);
+		}
+
+		if (toIngest.length === 0) {
+			console.log("All playlists already ingested and unchanged. Exiting.");
 			return;
 		}
 
-		playlistJson.snapshot = rash;
 		const context = { totalUpserted: 0 };
+
+		for (let i = 0; i < toIngest.length; i += batchSize) {
+			const batch = toIngest.slice(i, i + batchSize);
+			const agg = {
+				playlists: [],
+				artists: [],
+				albums: [],
+				tracks: [],
+				track_artists: [],
+				playlist_tracks: [],
+			};
+			for (const p of batch) {
+				const norm = normalizeData(p);
+				agg.playlists = agg.playlists.concat(norm.playlists);
+				agg.artists = agg.artists.concat(norm.artists);
+				agg.albums = agg.albums.concat(norm.albums);
+				agg.tracks = agg.tracks.concat(norm.tracks);
+				agg.track_artists = agg.track_artists.concat(norm.track_artists);
+				agg.playlist_tracks = agg.playlist_tracks.concat(norm.playlist_tracks);
+			}
+			await upsertData(agg, context);
+		}
+
 		const audio_features = featuresJson.audio_features;
-
-		const normalizedData = normalizeData(playlistJson);
-
-		await upsertData(normalizedData, context);
 		await upsertData({ audio_features }, context);
 
 		console.log(`Total rows upserted: ${context.totalUpserted}`);
