@@ -9,8 +9,7 @@ CREATE TABLE IF NOT EXISTS albums (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     release_date DATE,
-    album_type VARCHAR(50),
-    artist_id INT REFERENCES artists(id) ON DELETE CASCADE
+    album_type VARCHAR(50)
 );
 
 CREATE TABLE IF NOT EXISTS tracks (
@@ -57,7 +56,7 @@ CREATE TABLE IF NOT EXISTS audio_features (
 -- Extra table
 CREATE TABLE IF NOT EXISTS track_artists (
   track_id INT NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
-  artist_id INT NOT NULL REFERENCES artists(id) ON DELETE,
+  artist_id INT NOT NULL REFERENCES artists(id),
   PRIMARY KEY (track_id, artist_id)
 );
 
